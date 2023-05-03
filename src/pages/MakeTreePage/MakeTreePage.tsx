@@ -1,6 +1,6 @@
 import style from './MakeTreePage.module.scss';
 
-import React, { createContext, useState, useLayoutEffect } from 'react';
+import React, { createContext, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import classNames from 'classnames';
@@ -13,25 +13,34 @@ import BackgroundCustomList from '@/components/BackgroundCustomList/BackgroundCu
 import ShortButtonList from '@/components/ShortButtonList/ShortButtonList';
 import OriginTree from '@/components/OriginTree/OriginTree';
 
-import backgroundImageList, { backgroundImageListType } from '@/data/backgroundImageList';
+import backgroundImageList, {
+  backgroundImageListType,
+} from '@/data/backgroundImageList';
 import { A11yHidden } from '@/components/A11yHidden/A11yHidden';
-export interface ValueType {
-  backgroundImageList:backgroundImageListType[];
-  setSelectBg:React.Dispatch<string>;
-  handleSelect:(e:React.MouseEvent<HTMLButtonElement>)=>void;
-}
+import { atom, useRecoilState } from 'recoil';
+import { ValueType } from '@/interface/ValueType';
 
 export const BgContext = createContext({} as ValueType);
 
+const userInfoState = atom({
+  key: 'userInfoState',
+  default: {
+    nickname: '',
+    selectBg: 'bg-pink',
+  },
+});
+
 const MakeTreePage = () => {
-  const [nickname, setNickname] = useState<string>('');
-  const [selectBg, setSelectBg] = useState<string>(`bg-pink`);
+  const [userInfo, setUserInfo] = useRecoilState<{
+    nickname: string;
+    selectBg: string;
+  }>(userInfoState);
 
   const navigate = useNavigate();
 
   const { updateData } = useUpdateData('users');
 
-  const localUid:string = JSON.parse(localStorage.getItem('uid')||'null');
+  const localUid: string = JSON.parse(localStorage.getItem('uid') || 'null');
 
   useLayoutEffect(() => {
     useCallCollection('users').then((userList) => {
@@ -43,15 +52,18 @@ const MakeTreePage = () => {
     });
   }, []);
 
-  const handleSelect = (e:React.MouseEvent<HTMLButtonElement>) => {
-    const backgoundImage:HTMLElement|null = document.querySelector('.MakeTreePage');
-    const buttonElement:HTMLButtonElement|null = (e.target as HTMLElement).closest('button');
+  const handleSelect = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const backgoundImage: HTMLElement | null =
+      document.querySelector('.MakeTreePage');
+    const buttonElement: HTMLButtonElement | null = (
+      e.target as HTMLElement
+    ).closest('button');
 
-    if(buttonElement!==null && backgoundImage !==null){
-      backgroundImageList.map((item:backgroundImageListType) => {
+    if (buttonElement !== null && backgoundImage !== null) {
+      backgroundImageList.map((item: backgroundImageListType) => {
         if (parseInt(buttonElement.id) === item.id) {
           backgoundImage.style.background = `center / cover no-repeat url(/assets/${item.bigSrc}.png)`;
-          setSelectBg(item.bigSrc);
+          setUserInfo({ ...userInfo, selectBg: item.bigSrc });
           return;
         }
       });
@@ -60,9 +72,9 @@ const MakeTreePage = () => {
 
   const handleComplete = () => {
     updateData(localUid, {
-      bgSrc: selectBg,
+      bgSrc: userInfo.selectBg,
       isMade: true,
-      userNickname: nickname,
+      userNickname: userInfo.nickname,
     });
 
     navigate(`/share-tree/${localUid}`, { replace: true });
@@ -73,16 +85,12 @@ const MakeTreePage = () => {
     };
   };
 
-  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    setNickname(e.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserInfo({ ...userInfo, nickname: e.target.value });
   };
 
-
-
-
-  const value:ValueType = {
+  const value: ValueType = {
     backgroundImageList,
-    setSelectBg,
     handleSelect,
   };
 
@@ -102,7 +110,7 @@ const MakeTreePage = () => {
               type="text"
               id={'userNickname'}
               name="userNickname"
-              value={nickname}
+              value={userInfo.nickname}
               maxLength={6}
               placeholder="닉네임"
               onChange={handleChange}

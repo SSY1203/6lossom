@@ -12,13 +12,16 @@ import LoginButton from '@/components/LoginButton/LoginButton';
 import ModalProjectInfo from '@/components/ModalProjectInfo/ModalProjectInfo';
 import ProjectInfoButton from '@/components/ProjectInfoButton/ProjectInfoButton';
 
+import { useRecoilState } from 'recoil';
+import { modalProjectInfoState } from '@/atom/modalProjectInfoState';
+
 const HomePage = () => {
-  const [modal, setModal] = useState<boolean>(false);
+  const [modal, setModal] = useRecoilState(modalProjectInfoState);
 
   const navigate = useNavigate();
 
   const { signOut } = useSignOut();
-  const { createAuthUser} = useCreateAuthUser('users');
+  const { createAuthUser } = useCreateAuthUser('users');
 
   const handleModal = () => {
     setModal(!modal);
