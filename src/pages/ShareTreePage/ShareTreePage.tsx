@@ -49,6 +49,8 @@ import { FlowerInfoType } from '@/interface/FlowerInfoType';
 import { MessageVisibilityType } from '@/interface/MessageVisibilityType';
 import { atom, selector, useRecoilState, useRecoilValue } from 'recoil';
 import { modalProjectInfoState } from '@/atom/modalProjectInfoState';
+import { pageTotalCountState } from '@/atom/pageTotalCountState';
+import { getPageTotalCount } from '@/utils/getPageTotalCount';
 
 interface UserType {
   userNickname: string;
@@ -120,11 +122,6 @@ const lastVisibleState = atom<QueryDocumentSnapshot<DocumentData> | null>({
   default: null,
 });
 
-const pageTotalCountState = atom<number>({
-  key: 'pageTotalCountState',
-  default: 0,
-});
-
 const hasPrevPageState = selector<boolean>({
   key: 'hasPrevPageState',
   get: ({ get }) => {
@@ -156,7 +153,7 @@ const activeState = selector<boolean>({
   key: 'activeState',
   get: ({ get }) => {
     const startDate: Date = new Date(new Date().getFullYear(), 3, 15); // 3월 15일
-    const endDate: Date = new Date(new Date().getFullYear(), 4, 15); // 4월 14일
+    const endDate: Date = new Date(new Date().getFullYear(), 5, 15); // 4월 14일
     return new Date() >= startDate && new Date() <= endDate;
   },
 });
@@ -216,7 +213,7 @@ const ShareTreePage = () => {
   const localUid = JSON.parse(localStorage.getItem('uid') || 'null');
 
   useLayoutEffect(() => {
-    getPageTotalCount();
+    getPageTotalCount(uid);
     queryPage('next');
   }, []);
 
@@ -247,13 +244,6 @@ const ShareTreePage = () => {
 
   const preventGoBack = () => {
     history.pushState(null, '', window.location.href);
-  };
-
-  const getPageTotalCount = async () => {
-    const res = await getCountFromServer(
-      query(flowerListRef, orderBy('createAt', 'asc'))
-    );
-    setPageTotalCount(res.data().count);
   };
 
   const queryPage = async (text: string, limitCount: number = 7) => {
