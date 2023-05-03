@@ -1,16 +1,13 @@
 import style from './WriteMessagePage.module.scss';
 
-import React, { useState, useRef, useLayoutEffect, LegacyRef } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { db } from '@/firebase/app';
 import {
   collection,
   doc,
-  getCountFromServer,
   getDoc,
-  orderBy,
-  query,
   serverTimestamp,
   setDoc,
 } from 'firebase/firestore';
@@ -22,24 +19,44 @@ import UsageDescription from '@/components/UsageDescription/UsageDescription';
 import LongButtonList from '@/components/LongButtonList/LongButtonList';
 import { A11yHidden } from '@/components/A11yHidden/A11yHidden';
 import blossomInfoList, { blossomInfoListType } from '@/data/blossomInfoList';
+import { getPageTotalCount } from '@/utils/getPageTotalCount';
+import { atom, useRecoilState } from 'recoil';
 
 interface StateType {
   author: string;
   content: string;
 }
 
-const WriteMessagePage = () => {
-  const [nickname, setNickname] = useState<string>('');
+const nicknameState = atom<string>({
+  key: 'nicknameState',
+  default: '',
+});
 
-  const [pageTotalCount, setPageTotalCount] = useState<number>(0);
+const textState = atom<string>({
+  key: 'textState',
+  default: '',
+});
 
-  const [text, setText] = useState<string>('');
-  const [state, setState] = useState<StateType>({
+const stateState = atom<StateType>({
+  key: 'state',
+  default: {
     author: '',
     content: '',
-  });
+  },
+});
 
-  const [showModal, setShowModal] = useState<boolean>(false);
+const showModalState = atom<boolean>({
+  key: 'showModalState',
+  default: false,
+});
+
+const WriteMessagePage = () => {
+  const [nickname, setNickname] = useRecoilState(nicknameState);
+
+  const [text, setText] = useRecoilState(textState);
+  const [state, setState] = useRecoilState(stateState);
+
+  const [showModal, setShowModal] = useRecoilState(showModalState);
 
   const authorInput = useRef<HTMLInputElement>(null);
   const contentInput = useRef<HTMLTextAreaElement>(null);
@@ -52,18 +69,9 @@ const WriteMessagePage = () => {
       const docRef = doc(db, `users/${uid}`);
       const docSnap = await getDoc(docRef);
       setNickname(docSnap.data()?.userNickname);
-      getPageTotalCount();
+      getPageTotalCount(uid);
     })();
   }, []);
-
-  const getPageTotalCount = async () => {
-    const flowerListRef = collection(db, `users/${uid}/flowerList`);
-    const res = await getCountFromServer(
-      query(flowerListRef, orderBy('createAt', 'asc'))
-    );
-
-    setPageTotalCount(res.data().count);
-  };
 
   const handleChangeState = (e: React.ChangeEvent<HTMLElement>) => {
     const { name, value } = e.target as HTMLInputElement;
