@@ -2,7 +2,7 @@ import style from './SignInPage.module.scss';
 
 import React, { useState } from 'react';
 import { useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useSignIn } from '@/firebase/auth/useSignIn';
 import { useAuthState } from '@/firebase/auth/useAuthState';
@@ -10,6 +10,7 @@ import { useAuthState } from '@/firebase/auth/useAuthState';
 import { FormInput } from '@/components/FormInput/FormInput';
 import Notification from '@/components/Notification/Notification';
 import { A11yHidden } from '@/components/A11yHidden/A11yHidden';
+import { atom, useRecoilState } from 'recoil';
 
 interface initialFromStateType {
   email: string;
@@ -21,12 +22,33 @@ const initialFormState: initialFromStateType = {
   password: '',
 };
 
+const renderNotificationState = atom<boolean>({
+  key: 'renderNotificationState',
+  default: false,
+});
+
+const notificationAriaLiveState = atom<
+  'off' | 'assertive' | 'polite' | undefined
+>({
+  key: 'notificationAriaLiveState',
+  default: 'off',
+});
+
+const notificationRoleState = atom<string>({
+  key: 'notificationRoleState',
+  default: '',
+});
+
 export default function SignInPage() {
-  const [renderNotification, setRenderNotification] = useState<boolean>(false);
-  const [notificationAriaLive, setNotificationAriaLive] = useState<
-    'off' | 'assertive' | 'polite' | undefined
-  >('off');
-  const [notificationRole, setNotificationRole] = useState<string>('');
+  const [renderNotification, setRenderNotification] = useRecoilState(
+    renderNotificationState
+  );
+  const [notificationAriaLive, setNotificationAriaLive] = useRecoilState(
+    notificationAriaLiveState
+  );
+  const [notificationRole, setNotificationRole] = useRecoilState(
+    notificationRoleState
+  );
 
   const formStateRef = useRef<initialFromStateType>(initialFormState);
   const notificationRef = useRef<HTMLSpanElement>(null);
